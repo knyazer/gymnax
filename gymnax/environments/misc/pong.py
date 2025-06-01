@@ -16,16 +16,19 @@ from flax import struct
 from matplotlib import colors
 
 from gymnax.environments import environment, spaces
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
+
+# TODO: should the observation be float?
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    paddle_centers: jax.Array
-    ball_position: jax.Array
-    last_ball_position: jax.Array
-    ball_velocity: jax.Array
-    time: int
-    terminal: bool
+    paddle_centers: Int[Array, "2"]
+    ball_position: Int[Array, "2"]
+    last_ball_position: Int[Array, "2"]
+    ball_velocity: Int[Array, "2"]
+    time: Int[Array, ""]
+    terminal: Bool[Array, ""]
 
 
 @struct.dataclass
@@ -61,11 +64,17 @@ class Pong(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
-        action: int | float | jax.Array,
+        action: int | Int[Array, ""],
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "{self.height} {self.width} 3"],
+        EnvState,
+        Float[Array, ""],
+        Bool[Array, ""],
+        dict[Any, Any],
+    ]:
         """Perform single timestep state transition."""
         last_ball_position = state.ball_position
 
@@ -98,8 +107,8 @@ class Pong(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "{self.height} {self.width} 3"], EnvState]:
         """Reset environment state by sampling initial position."""
         paddle_centers = jnp.array([self.height / 2, self.height / 2])
         ball_position = jnp.array([self.height / 2, self.width / 2])
@@ -114,7 +123,12 @@ class Pong(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state), state
 
-    def get_obs(self, state: EnvState, params=None, key=None) -> jax.Array:
+    def get_obs(
+        self,
+        state: EnvState,
+        params: EnvParams | None = None,
+        key: PRNGKeyArray | None = None,
+    ) -> Float[Array, "{self.height} {self.width} 3"]:
         """Return observation from raw state trafo."""
         obs = jnp.zeros((self.height, self.width, 3))
         ball_index = jnp.floor(state.ball_position)
@@ -142,7 +156,7 @@ class Pong(environment.Environment[EnvState, EnvParams]):
         ].set(1)  # paddle
         return obs.reshape((self.height, self.width, 3)).astype(jnp.float32)
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         done_steps = state.time >= params.max_steps_in_episode
         done_term = update_game_state(state, self.width)
@@ -303,12 +317,12 @@ def move_ball(state: EnvState) -> EnvState:
 
 
 def move_paddles(
-    action: int,
-    paddle_y_speed: int,
+    action: Int[Array, ""],
+    paddle_y_speed: Int[Array, ""],
     state: EnvState,
-    paddle_half_height: int,
-    height: int,
-    use_ai_policy: bool,
+    paddle_half_height: Int[Array, ""],
+    height: Int[Array, ""],
+    use_ai_policy: Bool[Array, ""],
 ) -> EnvState:
     """Update paddle positions and clip at height borders."""
     paddle_direction = (action == 2).astype(jnp.int32) - (action == 1).astype(jnp.int32)
