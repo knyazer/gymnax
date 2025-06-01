@@ -63,15 +63,13 @@ class Box(Space):
         self.shape = shape
         self.dtype = dtype
 
-    def sample(
-        self, key: PRNGKeyArray
-    ) -> Float[Array, "{self.shape}"]:  # TODO: might not work?
+    def sample(self, key: PRNGKeyArray) -> Float[Array, "*"]:
         """Sample random action uniformly from 1D continuous range."""
         return jax.random.uniform(
             key, shape=self.shape, minval=self.low, maxval=self.high
         ).astype(self.dtype)
 
-    def contains(self, x: Float[Array, "{self.shape}"]) -> Bool[Array, ""]:
+    def contains(self, x: Float[Array, "*"]) -> Bool[Array, ""]:
         """Check whether specific object is within space."""
         # type_cond = isinstance(x, self.dtype)
         # shape_cond = (x.shape == self.shape)
