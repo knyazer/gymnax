@@ -9,14 +9,18 @@ import jax.numpy as jnp
 import numpy as np
 from gymnasium import spaces as gspc
 
+from jaxtyping import Array, Float, Bool, Int, PRNGKeyArray
+
+# TODO: try to infer types here
+
 
 class Space:
     """Minimal jittable class for abstract gymnax space."""
 
-    def sample(self, key: jax.Array) -> jax.Array:
+    def sample(self, key: PRNGKeyArray) -> Array:
         raise NotImplementedError
 
-    def contains(self, x: jax.Array) -> Any:
+    def contains(self, x: Array) -> Any:
         raise NotImplementedError
 
 
@@ -29,13 +33,13 @@ class Discrete(Space):
         self.shape = ()
         self.dtype = jnp.int32
 
-    def sample(self, key: jax.Array) -> jax.Array:
+    def sample(self, key: PRNGKeyArray) -> Int[Array, ""]:
         """Sample random action uniformly from set of categorical choices."""
         return jax.random.randint(
             key, shape=self.shape, minval=0, maxval=self.n
         ).astype(self.dtype)
 
-    def contains(self, x: jax.Array) -> jax.Array:
+    def contains(self, x: Int[Array, ""]) -> Bool[Array, ""]:
         """Check whether specific object is within space."""
         x = x.astype(jnp.int32)
         # type_cond = isinstance(x, self.dtype)
@@ -49,8 +53,8 @@ class Box(Space):
 
     def __init__(
         self,
-        low: jnp.ndarray | float,
-        high: jnp.ndarray | float,
+        low: Float[Array, ""] | float,
+        high: Float[Array, ""] | float,
         shape: Any,  # Tuple[int],
         dtype: jnp.dtype = jnp.float32,
     ):
@@ -59,13 +63,15 @@ class Box(Space):
         self.shape = shape
         self.dtype = dtype
 
-    def sample(self, key: jax.Array) -> jax.Array:
+    def sample(
+        self, key: PRNGKeyArray
+    ) -> Float[Array, "{self.shape}"]:  # TODO: might not work?
         """Sample random action uniformly from 1D continuous range."""
         return jax.random.uniform(
             key, shape=self.shape, minval=self.low, maxval=self.high
         ).astype(self.dtype)
 
-    def contains(self, x: jax.Array) -> jax.Array:
+    def contains(self, x: Float[Array, "{self.shape}"]) -> Bool[Array, ""]:
         """Check whether specific object is within space."""
         # type_cond = isinstance(x, self.dtype)
         # shape_cond = (x.shape == self.shape)
@@ -76,11 +82,11 @@ class Box(Space):
 class Dict(Space):
     """Minimal jittable class for dictionary of simpler jittable spaces."""
 
-    def __init__(self, spaces: Any):
+    def __init__(self, spaces: Sequence[Space]):
         self.spaces = spaces
         self.num_spaces = len(spaces)
 
-    def sample(self, key: jax.Array) -> Any:
+    def sample(self, key: PRNGKeyArray) -> Any:
         """Sample random action from all subspaces."""
         key_split = jax.random.split(key, self.num_spaces)
         return collections.OrderedDict(
@@ -90,7 +96,7 @@ class Dict(Space):
             ]
         )
 
-    def contains(self, x: jax.Array) -> bool:
+    def contains(self, x: Any) -> Bool[Array, ""]:
         """Check whether dimensions of object are within subspace."""
         # type_cond = isinstance(x, Dict)
         # num_space_cond = len(x) != len(self.spaces)
@@ -108,12 +114,12 @@ class Tuple(Space):
         self.spaces = spaces
         self.num_spaces = len(spaces)
 
-    def sample(self, key: jax.Array) -> Any:
+    def sample(self, key: PRNGKeyArray) -> tuple[Any]:
         """Sample random action from all subspaces."""
         key_split = jax.random.split(key, self.num_spaces)
         return tuple([s.sample(key_split[i]) for i, s in enumerate(self.spaces)])
 
-    def contains(self, x: jax.Array) -> bool:
+    def contains(self, x: Array) -> Bool[Array, ""]:
         """Check whether dimensions of object are within subspace."""
         # type_cond = isinstance(x, tuple)
         # num_space_cond = len(x) != len(self.spaces)

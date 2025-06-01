@@ -46,7 +46,7 @@ class SimpleBandit(environment.Environment[EnvState, EnvParams]):
         action: int | float | Float[Array, ""] | Int[Array, ""],
         params: EnvParams,
     ) -> tuple[
-        Float[Array, "*"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+        Float[Array, "1 1"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
     ]:
         """Perform single timestep state transition."""
         reward = state.rewards[action]
@@ -69,7 +69,7 @@ class SimpleBandit(environment.Environment[EnvState, EnvParams]):
 
     def reset_env(
         self, key: PRNGKeyArray, params: EnvParams
-    ) -> tuple[Float[Array, "*"], EnvState]:
+    ) -> tuple[Float[Array, "1 1"], EnvState]:
         """Reset environment state by sampling initial position."""
         action_mask = jax.random.choice(
             key,

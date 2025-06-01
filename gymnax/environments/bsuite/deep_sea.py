@@ -15,14 +15,14 @@ from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    row: int | Int[Array, ""]
-    column: int | Int[Array, ""]
-    bad_episode: bool | Bool[Array, ""]
-    total_bad_episodes: int | Int[Array, ""]
-    denoised_return: int | Int[Array, ""]
-    optimal_return: float | Float[Array, ""]
+    row: Int[Array, ""]
+    column: Int[Array, ""]
+    bad_episode: Bool[Array, ""]
+    total_bad_episodes: Int[Array, ""]
+    denoised_return: Int[Array, ""]
+    optimal_return: Float[Array, ""]
     action_mapping: Int[Array, "size size"]
-    time: int | Int[Array, ""]
+    time: Int[Array, ""]
 
 
 @struct.dataclass

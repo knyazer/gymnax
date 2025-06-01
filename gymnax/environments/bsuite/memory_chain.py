@@ -51,7 +51,7 @@ class MemoryChain(environment.Environment[EnvState, EnvParams]):
         action: int | Int[Array, ""],
         params: EnvParams,
     ) -> tuple[
-        Float[Array, "num_bits+2"],
+        Float[Array, "{self.num_bits+2}"],
         EnvState,
         Float[Array, ""],
         Bool[Array, ""],
@@ -90,7 +90,7 @@ class MemoryChain(environment.Environment[EnvState, EnvParams]):
 
     def reset_env(
         self, key: PRNGKeyArray, params: EnvParams
-    ) -> tuple[Float[Array, "num_bits+2"], EnvState]:
+    ) -> tuple[Float[Array, "{self.num_bits+2}"], EnvState]:
         """Reset environment state by sampling initial position."""
         key_context, key_query = jax.random.split(key)
         context = jax.random.bernoulli(key_context, p=0.5, shape=(self.num_bits,))
@@ -106,7 +106,7 @@ class MemoryChain(environment.Environment[EnvState, EnvParams]):
 
     def get_obs(
         self, state: EnvState, params: EnvParams, key: PRNGKeyArray | None = None
-    ) -> Float[Array, "num_bits+2"]:
+    ) -> Float[Array, "{self.num_bits+2}"]:
         """Return observation from raw state trafo."""  # TODO: what does 'trafo' mean?
         # Obs: [time remaining, query, num_bits of context]
         obs = jnp.zeros(shape=(self.num_bits + 2,), dtype=jnp.float32)

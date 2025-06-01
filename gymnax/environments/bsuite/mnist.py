@@ -34,7 +34,7 @@ class MNISTBandit(environment.Environment[EnvState, EnvParams]):
         (images, labels), _ = load_mnist.load_mnist()
         self.num_data = int(fraction * len(labels))
         self.image_shape = images.shape[1:]
-        self.images: Int[Array, "n w h"] = jnp.array(images[: self.num_data])
+        self.images = jnp.array(images[: self.num_data])
         self.labels = jnp.array(labels[: self.num_data])
 
     @property
@@ -49,7 +49,11 @@ class MNISTBandit(environment.Environment[EnvState, EnvParams]):
         action: int | Int[Array, ""],
         params: EnvParams,
     ) -> tuple[
-        Float[Array, "w h"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+        Float[Array, "{self.image_shape[0]} {self.image_shape[1]}"],
+        EnvState,
+        Float[Array, ""],
+        Bool[Array, ""],
+        dict[Any, Any],
     ]:
         """Perform single timestep state transition."""
         correct = action == state.correct_label
@@ -73,7 +77,7 @@ class MNISTBandit(environment.Environment[EnvState, EnvParams]):
 
     def reset_env(
         self, key: PRNGKeyArray, params: EnvParams
-    ) -> tuple[Float[Array, "w h"], EnvState]:
+    ) -> tuple[Float[Array, "{self.image_shape[0]} {self.image_shape[1]}"], EnvState]:
         """Reset environment state by sampling initial position."""
         idx = jax.random.randint(key, minval=0, maxval=self.num_data, shape=())
         image = self.images[idx].astype(jnp.float32) / 255

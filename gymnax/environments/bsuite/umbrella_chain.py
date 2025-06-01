@@ -48,7 +48,7 @@ class UmbrellaChain(environment.Environment[EnvState, EnvParams]):
         action: int | Int[Array, ""],
         params: EnvParams,
     ) -> tuple[
-        Float[Array, "n_distractor+3"],
+        Float[Array, "{self.n_distractor+3}"],
         EnvState,
         Float[Array, ""],
         Bool[Array, ""],
@@ -94,7 +94,7 @@ class UmbrellaChain(environment.Environment[EnvState, EnvParams]):
 
     def reset_env(
         self, key: PRNGKeyArray, params: EnvParams
-    ) -> tuple[Float[Array, "n_distractor+3"], EnvState]:
+    ) -> tuple[Float[Array, "{self.n_distractor+3}"], EnvState]:
         """Reset environment state by sampling initial position."""
         key_need, key_has, key_distractor = jax.random.split(key, 3)
         need_umbrella = jnp.int32(jax.random.bernoulli(key_need, p=0.5, shape=()))
@@ -109,7 +109,7 @@ class UmbrellaChain(environment.Environment[EnvState, EnvParams]):
 
     def get_obs(
         self, state: EnvState, key: PRNGKeyArray, params: EnvParams
-    ) -> Float[Array, "n_distractor+3"]:
+    ) -> Float[Array, "{self.n_distractor+3}"]:
         """Return observation from raw state trafo."""
         obs = jnp.zeros(shape=(3 + self.n_distractor,), dtype=jnp.float32)
         obs = obs.at[0].set(state.need_umbrella.astype(jnp.int32))

@@ -53,7 +53,7 @@ class Catch(environment.Environment[EnvState, EnvParams]):
         action: int | Int[Array, ""],
         params: EnvParams,
     ) -> tuple[
-        Float[Array, "rows cols"],
+        Float[Array, "{self.rows} {self.columns}"],
         EnvState,
         Float[Array, ""],
         Bool[Array, ""],
@@ -103,7 +103,7 @@ class Catch(environment.Environment[EnvState, EnvParams]):
 
     def reset_env(
         self, key: PRNGKeyArray, params: EnvParams
-    ) -> tuple[Float[Array, "rows cols"], EnvState]:
+    ) -> tuple[Float[Array, "{self.rows} {self.columns}"], EnvState]:
         """Reset environment state by sampling initial position."""
         ball_x, ball_y, paddle_x, paddle_y = sample_init_state(
             key, self.rows, self.columns
@@ -124,7 +124,7 @@ class Catch(environment.Environment[EnvState, EnvParams]):
         state: EnvState,
         params: EnvParams | None = None,
         key: PRNGKeyArray | None = None,
-    ) -> Float[Array, "rows cols"]:
+    ) -> Float[Array, "{self.rows} {self.columns}"]:
         """Return observation from raw state trafo."""
         obs = jnp.zeros((self.rows, self.columns), dtype=jnp.int32)
         obs = obs.at[state.ball_y, state.ball_x].set(1)
