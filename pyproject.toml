@@ -12,6 +12,7 @@ dependencies = [
     "gymnasium",
     "matplotlib",
     "seaborn",
+    "jaxtyping",
 ]
 classifiers = [
     "Programming Language :: Python :: 3.10",
@@ -35,6 +36,7 @@ test = [
     "flax",
     "brax",
     "minatar",
+    "beartype",
 ]
 
 [project.urls]

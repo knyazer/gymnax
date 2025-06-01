@@ -2,6 +2,7 @@
 
 from gymnax import environments, registration
 
+
 EnvParams = environments.EnvParams
 EnvState = environments.EnvState
 make = registration.make
