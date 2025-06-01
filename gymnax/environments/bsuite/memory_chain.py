@@ -12,15 +12,18 @@ import jax.numpy as jnp
 from flax import struct
 
 from gymnax.environments import environment, spaces
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
+
+# TODO: suggest robert to add an alpha version to test how users manage with jaxtyping
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    context: int
-    query: int
-    total_perfect: int
-    total_regret: float
-    time: int
+    context: Int[Array, ""]
+    query: Int[Array, ""]
+    total_perfect: Int[Array, ""]
+    total_regret: Float[Array, ""]
+    time: Int[Array, ""]
 
 
 @struct.dataclass
@@ -43,11 +46,17 @@ class MemoryChain(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
-        action: int | float | jax.Array,
+        action: int | Int[Array, ""],
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "num_bits+2"],
+        EnvState,
+        Float[Array, ""],
+        Bool[Array, ""],
+        dict[Any, Any],
+    ]:
         """Perform single timestep state transition."""
         obs = self.get_obs(state, params)
 
@@ -80,8 +89,8 @@ class MemoryChain(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "num_bits+2"], EnvState]:
         """Reset environment state by sampling initial position."""
         key_context, key_query = jax.random.split(key)
         context = jax.random.bernoulli(key_context, p=0.5, shape=(self.num_bits,))
@@ -95,8 +104,10 @@ class MemoryChain(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state, params), state
 
-    def get_obs(self, state: EnvState, params: EnvParams, key=None) -> jax.Array:
-        """Return observation from raw state trafo."""
+    def get_obs(
+        self, state: EnvState, params: EnvParams, key: PRNGKeyArray | None = None
+    ) -> Float[Array, "num_bits+2"]:
+        """Return observation from raw state trafo."""  # TODO: what does 'trafo' mean?
         # Obs: [time remaining, query, num_bits of context]
         obs = jnp.zeros(shape=(self.num_bits + 2,), dtype=jnp.float32)
         # Show time remaining - every step.
@@ -115,10 +126,10 @@ class MemoryChain(environment.Environment[EnvState, EnvParams]):
         obs = obs.at[2:].set(context_val)
         return obs
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         done_steps = state.time >= params.max_steps_in_episode
-        done_mem = state.time - 1 == params.memory_length
+        done_mem = (state.time - 1) == params.memory_length
         return jnp.logical_or(done_steps, done_mem)
 
     @property

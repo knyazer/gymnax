@@ -13,18 +13,19 @@ import jax.numpy as jnp
 from flax import struct
 
 from gymnax.environments import environment, spaces
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    rewards: jax.Array
-    context: jax.Array
-    time: int
+    rewards: Float[Array, "n_act"]
+    context: Float[Array, ""]
+    time: Int[Array, ""]
 
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    reward_timestep: jax.Array = dataclasses.field(
+    reward_timestep: Int[Array, "n_ts"] = dataclasses.field(
         default_factory=lambda: jnp.array([1, 3, 10, 30, 100])
     )
     optimal_return: float = 1.1
@@ -42,15 +43,17 @@ class DiscountingChain(environment.Environment[EnvState, EnvParams]):
     @property
     def default_params(self) -> EnvParams:
         # Default environment parameters
-        return EnvParams(reward_timestep=jnp.array([1, 3, 10, 30, 100]))
+        return EnvParams()
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
         action: int | float | jax.Array,
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "2"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+    ]:
         """Perform single timestep state transition."""
         state = EnvState(
             rewards=state.rewards,
@@ -75,8 +78,8 @@ class DiscountingChain(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "2"], EnvState]:
         """Reset environment state by sampling initial position."""
         # Setup reward fct from mapping seed - random sampling outside of env
         reward = (
@@ -85,7 +88,9 @@ class DiscountingChain(environment.Environment[EnvState, EnvParams]):
         state = EnvState(rewards=reward, context=jnp.array(-1), time=0)
         return self.get_obs(state, params), state
 
-    def get_obs(self, state: EnvState, params: EnvParams, key=None) -> jax.Array:
+    def get_obs(
+        self, state: EnvState, params: EnvParams, key: PRNGKeyArray | None = None
+    ) -> Float[Array, "2"]:
         """Return observation from raw state trafo."""
         obs = jnp.zeros(shape=(2,), dtype=jnp.float32)
         obs = obs.at[0].set(state.context)
@@ -94,7 +99,7 @@ class DiscountingChain(environment.Environment[EnvState, EnvParams]):
         )
         return obs
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         done = state.time >= params.max_steps_in_episode
         return jnp.array(done)

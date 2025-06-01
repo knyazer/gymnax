@@ -12,14 +12,15 @@ import jax.numpy as jnp
 from flax import struct
 
 from gymnax.environments import environment, spaces
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    need_umbrella: int
-    has_umbrella: int
-    total_regret: int
-    time: int
+    need_umbrella: Int[Array, ""]
+    has_umbrella: Int[Array, ""]
+    total_regret: Int[Array, ""]
+    time: Int[Array, ""]
 
 
 @struct.dataclass
@@ -42,22 +43,30 @@ class UmbrellaChain(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
-        action: int | float | jax.Array,
+        action: int | Int[Array, ""],
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "n_distractor+3"],
+        EnvState,
+        Float[Array, ""],
+        Bool[Array, ""],
+        dict[Any, Any],
+    ]:
         """Perform single timestep state transition."""
         has_umbrella = jax.lax.select(state.time + 1 == 1, action, state.has_umbrella)
         reward = 0
         # Check if chain is full/up
         chain_full = state.time + 1 == params.chain_length
         has_need = has_umbrella == state.need_umbrella
-        reward += jnp.logical_and(chain_full, has_need)
-        reward -= jnp.logical_and(chain_full, 1 - has_need)
-        total_regret = state.total_regret + 2 * jnp.logical_and(
-            chain_full, 1 - has_need
+        reward += jnp.logical_and(chain_full, has_need).astype(jnp.int32)
+        reward -= jnp.logical_and(chain_full, jnp.logical_not(has_need)).astype(
+            jnp.int32
         )
+        total_regret = state.total_regret + 2 * jnp.logical_and(
+            chain_full, jnp.logical_not(has_need)
+        ).astype(jnp.int32)
 
         # If chain is not full/up add random rewards
         key_reward, key_distractor = jax.random.split(key)
@@ -84,8 +93,8 @@ class UmbrellaChain(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "n_distractor+3"], EnvState]:
         """Reset environment state by sampling initial position."""
         key_need, key_has, key_distractor = jax.random.split(key, 3)
         need_umbrella = jnp.int32(jax.random.bernoulli(key_need, p=0.5, shape=()))
@@ -98,18 +107,20 @@ class UmbrellaChain(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state=state, key=key_distractor, params=params), state
 
-    def get_obs(self, state: EnvState, key: jax.Array, params: EnvParams) -> jax.Array:
+    def get_obs(
+        self, state: EnvState, key: PRNGKeyArray, params: EnvParams
+    ) -> Float[Array, "n_distractor+3"]:
         """Return observation from raw state trafo."""
         obs = jnp.zeros(shape=(3 + self.n_distractor,), dtype=jnp.float32)
-        obs = obs.at[0].set(state.need_umbrella)
-        obs = obs.at[1].set(state.has_umbrella)
-        obs = obs.at[2].set(1 - state.time / params.chain_length)
+        obs = obs.at[0].set(state.need_umbrella.astype(jnp.int32))
+        obs = obs.at[1].set(state.has_umbrella.astype(jnp.int32))
+        obs = obs.at[2].set(1.0 - state.time / params.chain_length)
         obs = obs.at[3:].set(
             jax.random.bernoulli(key, p=0.5, shape=(self.n_distractor,)),
         )
         return obs
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         done_steps = state.time >= params.max_steps_in_episode
         done_chain = state.time == params.chain_length

@@ -5,21 +5,22 @@ from typing import Any
 import jax
 import jax.numpy as jnp
 from flax import struct
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 from gymnax.environments import environment, spaces
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    rewards: float
-    total_regret: float
-    time: float
+    rewards: Float[Array, ""] | float
+    total_regret: Float[Array, ""] | float
+    time: Float[Array, ""] | float
 
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    optimal_return: float = 1.0
-    max_steps_in_episode: int = 100
+    optimal_return: Float[Array, ""] | float = 1.0
+    max_steps_in_episode: Int[Array, ""] | int = 100
 
 
 class SimpleBandit(environment.Environment[EnvState, EnvParams]):
@@ -40,11 +41,13 @@ class SimpleBandit(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
-        action: int | float | jax.Array,
+        action: int | float | Float[Array, ""] | Int[Array, ""],
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "*"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+    ]:
         """Perform single timestep state transition."""
         reward = state.rewards[action]
         state = EnvState(
@@ -65,8 +68,8 @@ class SimpleBandit(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, Any]:  # dict]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "*"], EnvState]:
         """Reset environment state by sampling initial position."""
         action_mask = jax.random.choice(
             key,
@@ -79,11 +82,16 @@ class SimpleBandit(environment.Environment[EnvState, EnvParams]):
         state = EnvState(rewards, 0.0, 0)
         return self.get_obs(state), state
 
-    def get_obs(self, state: EnvState, params=None, key=None) -> jax.Array:
+    def get_obs(
+        self,
+        state: EnvState,
+        params: EnvParams | None = None,
+        key: PRNGKeyArray | None = None,
+    ) -> Float[Array, "1 1"]:
         """Return observation from raw state trafo."""
         return jnp.ones(shape=(1, 1), dtype=jnp.float32)
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         # Episode always terminates after single step - Do not reset though!
         return jnp.array(True)

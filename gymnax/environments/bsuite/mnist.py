@@ -9,30 +9,32 @@ from flax import struct
 from gymnax.environments import environment, spaces
 from gymnax.utils import load_mnist
 
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
+
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    correct_label: jax.Array
-    regret: jax.Array
-    time: int
+    correct_label: Int[Array, ""]
+    regret: Float[Array, ""]
+    time: int | Int[Array, ""]
 
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    optimal_return: int = 1
-    max_steps_in_episode: int = 1
+    optimal_return: int | Int[Array, ""] = 1
+    max_steps_in_episode: int | Int[Array, ""] = 1
 
 
 class MNISTBandit(environment.Environment[EnvState, EnvParams]):
     """JAX implementation of MNIST bandit environment."""
 
-    def __init__(self, fraction: float = 1.0):
+    def __init__(self, fraction: float | Float[Array, ""] = 1.0):
         super().__init__()
         # Load the image MNIST data at environment init
         (images, labels), _ = load_mnist.load_mnist()
         self.num_data = int(fraction * len(labels))
         self.image_shape = images.shape[1:]
-        self.images = jnp.array(images[: self.num_data])
+        self.images: Int[Array, "n w h"] = jnp.array(images[: self.num_data])
         self.labels = jnp.array(labels[: self.num_data])
 
     @property
@@ -42,11 +44,13 @@ class MNISTBandit(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
-        action: int | float | jax.Array,
+        action: int | Int[Array, ""],
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "w h"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+    ]:
         """Perform single timestep state transition."""
         correct = action == state.correct_label
         reward = jax.lax.select(correct, 1.0, -1.0)
@@ -68,8 +72,8 @@ class MNISTBandit(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "w h"], EnvState]:
         """Reset environment state by sampling initial position."""
         idx = jax.random.randint(key, minval=0, maxval=self.num_data, shape=())
         image = self.images[idx].astype(jnp.float32) / 255
@@ -80,7 +84,7 @@ class MNISTBandit(environment.Environment[EnvState, EnvParams]):
         )
         return image, state
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         # Every step transition is terminal! No long term credit assignment!
         return jnp.array(True)

@@ -8,17 +8,21 @@ from flax import struct
 
 from gymnax.environments import environment, spaces
 
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
+
+# TODO: do observations here have to be floats?
+
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    row: int
-    column: int
-    bad_episode: bool
-    total_bad_episodes: int
-    denoised_return: int
-    optimal_return: float
-    action_mapping: jax.Array
-    time: int
+    row: int | Int[Array, ""]
+    column: int | Int[Array, ""]
+    bad_episode: bool | Bool[Array, ""]
+    total_bad_episodes: int | Int[Array, ""]
+    denoised_return: int | Int[Array, ""]
+    optimal_return: float | Float[Array, ""]
+    action_mapping: Int[Array, "size size"]
+    time: int | Int[Array, ""]
 
 
 @struct.dataclass
@@ -41,7 +45,9 @@ class DeepSea(environment.Environment[EnvState, EnvParams]):
     def __init__(self, size: int = 8):
         super().__init__()
         self.size = size
-        self.action_mapping = jnp.ones([size, size])
+        # TODO: check that annotation failure on the next line leads to an error
+        # ala do (size, size+1) and check that it fails
+        self.action_mapping = jnp.ones((size, size), dtype=jnp.int32)
 
     @property
     def default_params(self) -> EnvParams:
@@ -50,11 +56,17 @@ class DeepSea(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
-        action: int | float | jax.Array,
+        action: int | Int[Array, ""],
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "size size"],
+        EnvState,
+        Float[Array, ""],
+        Bool[Array, ""],
+        dict[Any, Any],
+    ]:
         """Perform single timestep state transition."""
         # Pull out randomness for easier testing
         key_reward, key_trans = jax.random.split(key)
@@ -96,28 +108,28 @@ class DeepSea(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "size size"], EnvState]:
         """Reset environment state by sampling initial position."""
-        optimal_no_cost = (1 - params.deterministic) * (1 - 1 / self.size) ** (
-            self.size - 1
-        ) + params.deterministic * 1.0
+        optimal_no_cost = (1 - params.deterministic.astype(jnp.int32)) * (
+            1 - 1 / self.size
+        ) ** (self.size - 1) + params.deterministic.astype(jnp.int32)
         optimal_return = optimal_no_cost - params.unscaled_move_cost
 
         a_map_rand = jax.random.bernoulli(key, 0.5, (self.size, self.size))
-        a_map_determ = jnp.ones([self.size, self.size])
+        a_map_determ = jnp.ones((self.size, self.size))
 
         new_a_map_cond = jnp.logical_and(
-            1 - params.deterministic, params.sample_action_map
+            jnp.logical_not(params.deterministic), params.sample_action_map
         )
         old_a_map_cond = jnp.logical_and(
-            1 - params.deterministic,
-            1 - params.sample_action_map,
+            jnp.logical_not(params.deterministic),
+            jnp.logical_not(params.sample_action_map),
         )
         action_mapping = (
-            params.deterministic * a_map_determ
-            + new_a_map_cond * a_map_rand
-            + old_a_map_cond * self.action_mapping
+            params.deterministic.astype(jnp.int32) * a_map_determ
+            + new_a_map_cond.astype(jnp.int32) * a_map_rand
+            + old_a_map_cond.astype(jnp.int32) * self.action_mapping
         )
 
         state = EnvState(
@@ -133,7 +145,12 @@ class DeepSea(environment.Environment[EnvState, EnvParams]):
 
         return self.get_obs(state), state
 
-    def get_obs(self, state: EnvState, params=None, key=None) -> jax.Array:
+    def get_obs(
+        self,
+        state: EnvState,
+        params: EnvParams | None = None,
+        key: PRNGKeyArray | None = None,
+    ) -> Float[Array, "size size"]:
         """Return observation from raw state trafo."""
         obs_end = jnp.zeros(shape=(self.size, self.size), dtype=jnp.float32)
         end_cond = state.row >= self.size
@@ -188,16 +205,16 @@ class DeepSea(environment.Environment[EnvState, EnvParams]):
 
 def step_reward(
     state: EnvState,
-    action_right: bool,
-    right_cond: jax.Array,
-    rand_reward: jax.Array,
+    action_right: Bool[Array, ""],
+    right_cond: Bool[Array, ""],
+    rand_reward: Float[Array, ""],
     size: int,
     params: EnvParams,
-) -> tuple[jax.Array, jax.Array]:
+) -> tuple[Float[Array, ""], Float[Array, ""]]:
     """Get the reward for the selected action."""
     reward = 0.0
     # Reward calculation.
-    rew_cond = jnp.logical_and(state.column == size - 1, action_right)
+    rew_cond = jnp.logical_and(state.column == size - 1, action_right).astype(jnp.int32)
     reward += rew_cond
     denoised_return = state.denoised_return + rew_cond
 
@@ -211,8 +228,11 @@ def step_reward(
 
 
 def step_transition(
-    state: EnvState, action_right: bool, right_cond: jax.Array, size: int
-) -> tuple[jax.Array, int, jax.Array]:
+    state: EnvState,
+    action_right: Bool[Array, ""],
+    right_cond: Bool[Array, ""],
+    size: int,
+) -> tuple[Int[Array, ""], Int[Array, ""], Bool[Array, ""]]:
     """Get the state transition for the selected action."""
     # Standard right path transition
     column = jax.lax.select(

@@ -4,6 +4,8 @@
 Source: github.com/deepmind/bsuite/blob/master/bsuite/environments/catch.py.
 """
 
+# TODO: make sure that "float" observation here is necessary: int makes more sense
+
 from typing import Any
 
 import jax
@@ -13,15 +15,17 @@ from flax import struct
 
 from gymnax.environments import environment, spaces
 
+from jaxtyping import Int, Float, PRNGKeyArray, Array, Bool
+
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    ball_x: jax.Array
-    ball_y: jax.Array
-    paddle_x: int
-    paddle_y: int
-    prev_done: bool
-    time: int
+    ball_x: Int[Array, ""]
+    ball_y: Int[Array, ""]
+    paddle_x: int | Int[Array, ""]
+    paddle_y: int | Int[Array, ""]
+    prev_done: bool | Bool[Array, ""]
+    time: int | Int[Array, ""]
 
 
 @struct.dataclass
@@ -44,11 +48,17 @@ class Catch(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
-        action: int | float | jax.Array,
+        action: int | Int[Array, ""],
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "rows cols"],
+        EnvState,
+        Float[Array, ""],
+        Bool[Array, ""],
+        dict[Any, Any],
+    ]:
         """Perform single timestep state transition."""
         # Sample new init state each step & use if there was a reset!
         ball_x, ball_y, paddle_x, paddle_y = sample_init_state(
@@ -70,7 +80,7 @@ class Catch(environment.Environment[EnvState, EnvParams]):
         # Rewrite reward as boolean multiplication
         prev_done = ball_y == paddle_y
         catched = paddle_x == ball_x
-        reward = prev_done * jax.lax.select(catched, 1.0, -1.0)
+        reward = prev_done.astype(jnp.int32) * jax.lax.select(catched, 1.0, -1.0)
 
         state = state.replace(
             ball_x=ball_x,
@@ -92,8 +102,8 @@ class Catch(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "rows cols"], EnvState]:
         """Reset environment state by sampling initial position."""
         ball_x, ball_y, paddle_x, paddle_y = sample_init_state(
             key, self.rows, self.columns
@@ -109,14 +119,19 @@ class Catch(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state), state
 
-    def get_obs(self, state: EnvState, params=None, key=None) -> jax.Array:
+    def get_obs(
+        self,
+        state: EnvState,
+        params: EnvParams | None = None,
+        key: PRNGKeyArray | None = None,
+    ) -> Float[Array, "rows cols"]:
         """Return observation from raw state trafo."""
-        obs = jnp.zeros((self.rows, self.columns))
-        obs = obs.at[state.ball_y, state.ball_x].set(1.0)
-        obs = obs.at[state.paddle_y, state.paddle_x].set(1.0)
+        obs = jnp.zeros((self.rows, self.columns), dtype=jnp.int32)
+        obs = obs.at[state.ball_y, state.ball_x].set(1)
+        obs = obs.at[state.paddle_y, state.paddle_x].set(1)
         return obs
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         done_loose = state.ball_y == self.rows - 1
         done_steps = state.time >= params.max_steps_in_episode
@@ -154,7 +169,7 @@ class Catch(environment.Environment[EnvState, EnvParams]):
             }
         )
 
-    def render(self, state: EnvState, _: Any):  # params: EnvParams):
+    def render(self, state: EnvState, _: Any):
         """Small utility for plotting the agent's state."""
 
         fig, ax = plt.subplots()
@@ -179,8 +194,8 @@ class Catch(environment.Environment[EnvState, EnvParams]):
 
 
 def sample_init_state(
-    key: jax.Array, rows: int, columns: int
-) -> tuple[jax.Array, jax.Array, int, int]:
+    key: PRNGKeyArray, rows: int, columns: int
+) -> tuple[Int[Array, ""], Int[Array, ""], int, int]:
     """Sample a new initial state."""
     ball_x = jax.random.randint(key, shape=(), minval=0, maxval=columns)
     ball_y = 0
