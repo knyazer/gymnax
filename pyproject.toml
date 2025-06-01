@@ -37,6 +37,7 @@ test = [
     "brax",
     "minatar",
     "beartype",
+    "pytest-beartype",
 ]
 
 [project.urls]

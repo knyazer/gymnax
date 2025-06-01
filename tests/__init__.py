@@ -1,7 +1,3 @@
-from beartype.claw import beartype_this_package
-
-beartype_this_package()
-
 from tests.helpers import (
     assert_correct_state,
     assert_correct_transit,

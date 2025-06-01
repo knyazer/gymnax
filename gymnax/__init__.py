@@ -1,4 +1,7 @@
 """Gymnax: A library for creating and registering Gym environments."""
+from beartype.claw import beartype_this_package
+
+beartype_this_package()
 
 from gymnax import environments, registration
 
