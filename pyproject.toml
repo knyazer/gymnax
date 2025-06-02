@@ -30,14 +30,14 @@ dev = [
     "pytest-cov",
     "ruff",
     "mypy",
+    "beartype",
+    "pytest-beartype",
 ]
 test = [
     "chex",
     "flax",
     "brax",
     "minatar",
-    "beartype",
-    "pytest-beartype",
 ]
 
 [project.urls]

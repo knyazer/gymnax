@@ -77,7 +77,11 @@ class MinBreakout(environment.Environment[EnvState, EnvParams]):
         action: int | float | jax.Array,
         params: EnvParams,
     ) -> tuple[
-        Float[Array, "10 10 4"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+        Float[Array, "10 10 4"],
+        EnvState,
+        Float[Array, ""],
+        Bool[Array, ""],
+        dict[Any, Any],
     ]:
         """Perform single timestep state transition."""
         a = self.action_set[action]
@@ -116,7 +120,9 @@ class MinBreakout(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state), state
 
-    def get_obs(self, state: EnvState, params=None, key=None) -> Float[Array, "10 10 4"]:
+    def get_obs(
+        self, state: EnvState, params=None, key=None
+    ) -> Float[Array, "10 10 4"]:
         """Return observation from raw state trafo."""
         obs = jnp.zeros(self.obs_shape, dtype=jnp.bool)
         # Set the position of the player paddle, paddle, trail & brick map
@@ -219,7 +225,7 @@ def step_agent(
 
 def step_ball_brick(
     state: EnvState, new_x: Int[Array, ""], new_y: Int[Array, ""]
-) -> tuple[EnvState, Float[Array, ""]]:]
+) -> tuple[EnvState, Float[Array, ""]]:
     """Helper that computes reward and termination cond. from brickmap."""
 
     reward = 0
