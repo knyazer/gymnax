@@ -21,3 +21,4 @@ wheels/
 # Custom
 output/
 *.gif
+.TODO
