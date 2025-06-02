@@ -29,25 +29,26 @@ import jax.numpy as jnp
 from flax import struct
 
 from gymnax.environments import environment, spaces
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
     """State of the environment."""
 
-    pos: int
-    f_bullet_map: jax.Array
-    e_bullet_map: jax.Array
-    alien_map: jax.Array
-    alien_dir: int
-    enemy_move_interval: int
-    alien_move_timer: int
-    alien_shot_timer: int
-    ramp_index: int
-    shot_timer: int
-    ramping: bool
-    time: int
-    terminal: bool
+    pos: Int[Array, ""]
+    f_bullet_map: Bool[Array, "10 10"]
+    e_bullet_map: Bool[Array, "10 10"]
+    alien_map: Bool[Array, "10 10"]
+    alien_dir: Int[Array, ""]
+    enemy_move_interval: Int[Array, ""]
+    alien_move_timer: Int[Array, ""]
+    alien_shot_timer: Int[Array, ""]
+    ramp_index: Int[Array, ""]
+    shot_timer: Int[Array, ""]
+    ramping: Bool[Array, ""]
+    time: Int[Array, ""]
+    terminal: Bool[Array, ""]
 
 
 @struct.dataclass
@@ -82,11 +83,13 @@ class MinSpaceInvaders(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
         action: int | float | jax.Array,
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "10 10 6"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+    ]:
         """Perform single timestep state transition."""
         # Resolve player action - fire, left, right.
         a = self.action_set[action]
@@ -137,8 +140,8 @@ class MinSpaceInvaders(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "10 10 6"], EnvState]:
         """Reset environment state by sampling initial position."""
         state = EnvState(
             pos=5,
@@ -157,7 +160,7 @@ class MinSpaceInvaders(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state), state
 
-    def get_obs(self, state: EnvState, params=None, key=None) -> jax.Array:
+    def get_obs(self, state: EnvState, params=None, key=None) -> Float[Array, "10 10 6"]:
         """Return observation from raw state trafo."""
         obs = jnp.zeros((10, 10, 6), dtype=bool)
         # Update cannon, aliens - left + right dir, friendly + enemy bullet
@@ -173,7 +176,7 @@ class MinSpaceInvaders(environment.Environment[EnvState, EnvParams]):
         obs = obs.at[:, :, 5].set(state.e_bullet_map.astype(jnp.bool))
         return obs.astype(jnp.float32)
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         done_steps = state.time >= params.max_steps_in_episode
         return jnp.logical_or(done_steps, state.terminal)
@@ -217,7 +220,7 @@ class MinSpaceInvaders(environment.Environment[EnvState, EnvParams]):
         )
 
 
-def step_agent(action: jax.Array, state: EnvState, params: EnvParams) -> EnvState:
+def step_agent(action: Int[Array, ""], state: EnvState, params: EnvParams) -> EnvState:
     """Resolve player action - fire, left, right."""
     fire_cond = jnp.logical_and(action == 5, state.shot_timer == 0)
     left_cond, right_cond = (action == 1), (action == 3)
@@ -292,7 +295,7 @@ def step_aliens(state: EnvState) -> EnvState:
     )
 
 
-def step_shoot(state: EnvState, params: EnvParams) -> tuple[EnvState, jax.Array]:
+def step_shoot(state: EnvState, params: EnvParams) -> tuple[EnvState, Float[Array, ""]]:
     """Update aliens - shooting check and calculate rewards."""
     reward = 0
     alien_shot_cond = state.alien_shot_timer == 0
@@ -329,8 +332,8 @@ def step_shoot(state: EnvState, params: EnvParams) -> tuple[EnvState, jax.Array]
 
 
 def get_nearest_alien(
-    pos: int, alien_map: jax.Array
-) -> tuple[jax.Array, jax.Array, jax.Array]:
+    pos: Int[Array, ""], alien_map: Bool[Array, "10 10"]
+) -> tuple[Bool[Array, ""], Int[Array, ""], Int[Array, ""]]:]
     """Find alien closest to player in manhattan distance -> shot target."""
     ids = jnp.array([jnp.abs(jnp.array([i for i in range(10)]) - pos)])
     search_order = jnp.argsort(ids).squeeze()

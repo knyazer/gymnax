@@ -11,6 +11,7 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from flax import struct
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 from gymnax.environments import environment, spaces
 
@@ -18,9 +19,9 @@ from gymnax.environments import environment, spaces
 @struct.dataclass
 class EnvState(environment.EnvState):
     last_action: int
-    last_reward: jax.Array
-    pos: jax.Array
-    goal: jax.Array
+    last_reward: Float[Array, ""]
+    pos: Int[Array, "2"]
+    goal: Int[Array, "2"]
     time: float
 
 
@@ -39,7 +40,7 @@ class EnvParams(environment.EnvParams):
     max_steps_in_episode: int = 200
 
 
-def generate_maze_layout(maze_size: int, rf_size: int) -> jax.Array:
+def generate_maze_layout(maze_size: int, rf_size: int) -> Bool[Array, "height width"]:
     """Generate array representation of maze layout with walls."""
     # Need to add wall offset if receptive field size is large
     rf_offset = int((rf_size - 1) / 2)
@@ -104,11 +105,11 @@ class MetaMaze(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
-        action: int | float | jax.Array,
+        action: int | float | Int[Array, ""],
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[Float[Array, "obs_dim"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]]:
         """Perform single timestep state transition."""
         p = state.pos + self.directions[action]
         in_map = self.env_map[p[0], p[1]]
@@ -142,8 +143,8 @@ class MetaMaze(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "obs_dim"], EnvState]:
         """Reset environment state by sampling initial position."""
         # Reset both the agents position and the goal location
         goal = reset_goal(key, self.available_goals, params)
@@ -157,7 +158,7 @@ class MetaMaze(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state, params), state
 
-    def get_obs(self, state: EnvState, params: EnvParams, key=None) -> jax.Array:
+    def get_obs(self, state: EnvState, params: EnvParams, key=None) -> Float[Array, "obs_dim"]:
         """Return observation from raw state trafo."""
         rf_obs = jax.lax.dynamic_slice(
             self.occupied_map,
@@ -170,7 +171,7 @@ class MetaMaze(environment.Environment[EnvState, EnvParams]):
         )
         return jnp.hstack([rf_obs, action_one_hot, state.last_reward, time_rep])
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         # Check number of steps in episode termination condition
         done_steps = state.time >= params.max_steps_in_episode
@@ -263,14 +264,14 @@ class MetaMaze(environment.Environment[EnvState, EnvParams]):
         )
 
 
-def reset_goal(key: jax.Array, available_goals: jax.Array, _: EnvParams) -> jax.Array:
+def reset_goal(key: PRNGKeyArray, available_goals: Int[Array, "_ 2"], _: EnvParams) -> Int[Array, "2"]:
     """Reset the goal state/position in the environment."""
     goal_index = jax.random.randint(key, (), 0, available_goals.shape[0])
     goal = available_goals[goal_index][:]
     return goal
 
 
-def reset_pos(key: jax.Array, coords: jax.Array) -> jax.Array:
+def reset_pos(key: PRNGKeyArray, coords: Int[Array, "_ 2"]) -> Int[Array, "2"]:
     """Reset the position of the agent."""
     pos_index = jax.random.randint(key, (), 0, coords.shape[0])
     return coords[pos_index][:]

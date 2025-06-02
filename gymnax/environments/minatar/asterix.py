@@ -24,24 +24,25 @@ import jax.numpy as jnp
 from flax import struct
 
 from gymnax.environments import environment, spaces
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
     """State of the environment."""
 
-    player_x: int
-    player_y: int
-    shot_timer: int
-    spawn_speed: int
-    spawn_timer: int
-    move_speed: int
-    move_timer: int
-    ramp_timer: int
-    ramp_index: int
-    entities: jax.Array
-    time: int
-    terminal: bool
+    player_x: Int[Array, ""]
+    player_y: Int[Array, ""]
+    shot_timer: Int[Array, ""]
+    spawn_speed: Int[Array, ""]
+    spawn_timer: Int[Array, ""]
+    move_speed: Int[Array, ""]
+    move_timer: Int[Array, ""]
+    ramp_timer: Int[Array, ""]
+    ramp_index: Int[Array, ""]
+    entities: Int[Array, "8 5"]
+    time: Int[Array, ""]
+    terminal: Bool[Array, ""]
 
 
 @struct.dataclass
@@ -78,11 +79,13 @@ class MinAsterix(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
         action: int | float | jax.Array,
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "10 10 4"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+    ]:
         """Perform single timestep state transition."""
         # Spawn enemy if timer up - sample at each step & select based on timer
         spawn_entities_now = state.spawn_timer == 0
@@ -120,8 +123,8 @@ class MinAsterix(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "10 10 4"], EnvState]:
         """Reset environment state by sampling initial position."""
         state = EnvState(
             player_x=5,
@@ -139,7 +142,7 @@ class MinAsterix(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state), state
 
-    def get_obs(self, state: EnvState, params=None, key=None) -> jax.Array:
+    def get_obs(self, state: EnvState, params=None, key=None) -> Float[Array, "10 10 4"]:
         """Return observation from raw state trafo."""
         # Add a 5th channel to help with not used entities
         obs = jnp.zeros((10, 10, 5), dtype=jnp.int32)
@@ -159,7 +162,7 @@ class MinAsterix(environment.Environment[EnvState, EnvParams]):
             obs = obs.at[x[1], back_x, c_eff].set(leave_trail)
         return obs[:, :, :4].astype(jnp.float32)
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         done_steps = state.time >= params.max_steps_in_episode
         return jnp.logical_or(done_steps, state.terminal)
@@ -202,7 +205,7 @@ class MinAsterix(environment.Environment[EnvState, EnvParams]):
         )
 
 
-def step_agent(state: EnvState, action: jax.Array) -> EnvState:
+def step_agent(state: EnvState, action: Int[Array, ""]) -> EnvState:
     """Update the position of the agent."""
     # Resolve player action via implicit conditional updates of coordinates
     player_x = (
@@ -219,7 +222,7 @@ def step_agent(state: EnvState, action: jax.Array) -> EnvState:
     return state.replace(player_x=player_x, player_y=player_y)
 
 
-def spawn_entity(key: jax.Array, state: EnvState) -> tuple[jax.Array, jax.Array]:
+def spawn_entity(key: PRNGKeyArray, state: EnvState) -> tuple[Int[Array, "5"], Int[Array, ""]]:
     """Spawn new enemy or treasure at random location with random direction."""
     key_lr, key_gold, key_slot = jax.random.split(key, 3)
     lr = jax.random.choice(key_lr, jnp.array([1, 0]))
@@ -242,8 +245,8 @@ def spawn_entity(key: jax.Array, state: EnvState) -> tuple[jax.Array, jax.Array]
 
 
 def while_sample_slots(
-    key: jax.Array, state_entities: jax.Array
-) -> tuple[jax.Array, jax.Array]:
+    key: PRNGKeyArray, state_entities: Int[Array, "8"]
+) -> tuple[Int[Array, ""], Bool[Array, ""]]:
     """Go through random order of slots until slot is found that is free."""
     init_val = jnp.array([0, 0])
     # Sample random order of slot entries to go through - hack around jnp.where
@@ -271,7 +274,7 @@ def while_sample_slots(
 
 def step_entities(
     state: EnvState,
-) -> tuple[EnvState, jax.Array, bool]:
+) -> tuple[EnvState, Float[Array, ""], Bool[Array, ""]]:
     """Update positions of the entities and return reward, done."""
     done, reward = 0, jnp.array(0)
     # Loop over entities and check for collisions - either gold or enemy

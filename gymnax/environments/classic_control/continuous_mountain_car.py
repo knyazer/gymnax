@@ -12,13 +12,14 @@ import jax.numpy as jnp
 from flax import struct
 
 from gymnax.environments import environment, spaces
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    position: jax.Array
-    velocity: jax.Array
-    time: int
+    position: Float[Array, ""]
+    velocity: Float[Array, ""]
+    time: Int[Array, ""]
 
 
 @struct.dataclass
@@ -45,11 +46,13 @@ class ContinuousMountainCar(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
         action: int | float | jax.Array,
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "2"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+    ]:
         """Perform single timestep state transition."""
         force = jnp.clip(action, params.min_action, params.max_action)
         velocity = (
@@ -83,18 +86,18 @@ class ContinuousMountainCar(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "2"], EnvState]:
         """Reset environment state by sampling initial position."""
         init_state = jax.random.uniform(key, shape=(), minval=-0.6, maxval=-0.4)
         state = EnvState(position=init_state, velocity=jnp.array(0.0), time=0)
         return self.get_obs(state), state
 
-    def get_obs(self, state: EnvState, params=None, key=None) -> jax.Array:
+    def get_obs(self, state: EnvState, params=None, key=None) -> Float[Array, "2"]:
         """Return observation from raw state trafo."""
         return jnp.array([state.position, state.velocity]).squeeze()
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         done1 = (state.position >= params.goal_position) * (
             state.velocity >= params.goal_velocity

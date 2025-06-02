@@ -13,22 +13,23 @@ import jax.numpy as jnp
 from flax import struct
 
 from gymnax.environments import environment, spaces
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    joint_angle1: jax.Array
-    joint_angle2: jax.Array
-    velocity_1: jax.Array
-    velocity_2: jax.Array
-    time: int
+    joint_angle1: Float[Array, ""]
+    joint_angle2: Float[Array, ""]
+    velocity_1: Float[Array, ""]
+    velocity_2: Float[Array, ""]
+    time: Int[Array, ""]
 
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
     """Environment parameters for Acrobot."""
 
-    available_torque: jax.Array = dataclasses.field(
+    available_torque: Float[Array, "3"] = dataclasses.field(
         default_factory=lambda: jnp.array([-1.0, 0.0, +1.0])
     )
     dt: float = 0.2
@@ -59,11 +60,13 @@ class Acrobot(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
         action: int | float | jax.Array,
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "6"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+    ]:
         """Perform single timestep state transition."""
         torque = params.available_torque[action]
         # Add noise to force action - always sample - conditionals in JAX
@@ -112,8 +115,8 @@ class Acrobot(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "6"], EnvState]:
         """Reset environment state by sampling initial position."""
         init_state = jax.random.uniform(key, shape=(4,), minval=-0.1, maxval=0.1)
         state = EnvState(
@@ -125,7 +128,7 @@ class Acrobot(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state), state
 
-    def get_obs(self, state: EnvState, params=None, key=None) -> jax.Array:
+    def get_obs(self, state: EnvState, params=None, key=None) -> Float[Array, "6"]:
         """Return observation from raw state trafo."""
         return jnp.array(
             [
@@ -138,7 +141,7 @@ class Acrobot(environment.Environment[EnvState, EnvParams]):
             ]
         )
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         # Check termination and construct updated state
         done_angle = (
@@ -202,7 +205,7 @@ class Acrobot(environment.Environment[EnvState, EnvParams]):
         )
 
 
-def dsdt(s_augmented: jax.Array, _: float, params: EnvParams) -> jax.Array:
+def dsdt(s_augmented: Float[Array, "5"], _: float, params: EnvParams) -> Float[Array, "5"]:
     """Compute time derivative of the state change - Use for ODE int."""
     m1, m2 = params.link_mass_1, params.link_mass_2
     l1 = params.link_length_1
@@ -228,7 +231,7 @@ def dsdt(s_augmented: jax.Array, _: float, params: EnvParams) -> jax.Array:
     return jnp.array([dtheta1, dtheta2, ddtheta1, ddtheta2, 0.0])
 
 
-def wrap(x: float, m: float, big_m: float) -> jax.Array:
+def wrap(x: float, m: float, big_m: float) -> Float[Array, ""]:
     """For example, m = -180, M = 180 (degrees), x = 360 --> returns 0."""
     diff = big_m - m
     go_up = x < m  # Wrap if x is outside the left bound
@@ -243,7 +246,7 @@ def wrap(x: float, m: float, big_m: float) -> jax.Array:
     return x_out
 
 
-def rk4(y0: jax.Array, params: EnvParams):
+def rk4(y0: Float[Array, "5"], params: EnvParams) -> Float[Array, "5"]:
     """Runge-Kutta integration of ODE - Difference to OpenAI: Only 1 step!"""
     dt2 = params.dt / 2.0
     k1 = dsdt(y0, 0, params)

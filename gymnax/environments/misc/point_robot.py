@@ -8,16 +8,17 @@ import matplotlib.pyplot as plt
 from flax import struct
 
 from gymnax.environments import environment, spaces
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    last_action: jax.Array
-    last_reward: jax.Array
-    pos: jax.Array
-    goal: jax.Array
-    goals_reached: int
-    time: float
+    last_action: Float[Array, "2"]
+    last_reward: Float[Array, ""]
+    pos: Float[Array, "2"]
+    goal: Float[Array, "2"]
+    goals_reached: Int[Array, ""]
+    time: Float[Array, ""]
 
 
 @struct.dataclass
@@ -45,11 +46,13 @@ class PointRobot(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
         action: int | float | jax.Array,
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "6"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+    ]:
         """Sample bernoulli reward, increase counter, construct input."""
         a = jnp.clip(action, -params.max_force, params.max_force)
         pos = state.pos + a
@@ -81,8 +84,8 @@ class PointRobot(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "6"], EnvState]:
         """Reset environment state by sampling initial position."""
         # Sample reward function + construct state as concat with timestamp
         key_goal, key_pos = jax.random.split(key)
@@ -104,14 +107,14 @@ class PointRobot(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state, params), state
 
-    def get_obs(self, state: EnvState, params: EnvParams, key=None) -> jax.Array:
+    def get_obs(self, state: EnvState, params: EnvParams, key=None) -> Float[Array, "6"]:
         """Concatenate reward, one-hot action and time stamp."""
         time_rep = jax.lax.select(
             params.normalize_time, time_normalization(state.time), state.time
         )
         return jnp.hstack([state.pos, state.last_reward, state.last_action, time_rep])
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         # Check number of steps in episode termination condition
         done = state.time >= params.max_steps_in_episode
@@ -182,15 +185,15 @@ class PointRobot(environment.Environment[EnvState, EnvParams]):
 
 
 def time_normalization(
-    t: float, min_lim: float = -1.0, max_lim: float = 1.0, t_max: int = 100
-) -> float:
+    t: Float[Array, ""], min_lim: float = -1.0, max_lim: float = 1.0, t_max: int = 100
+) -> Float[Array, ""]:
     """Normalize time integer into range given max time."""
     return (max_lim - min_lim) * t / t_max + min_lim
 
 
 def sample_agent_position(
-    key: jax.Array, circle_radius: float, center_init: bool
-) -> jax.Array:
+    key: PRNGKeyArray, circle_radius: float, center_init: bool
+) -> Float[Array, "2"]:
     """Sample a random position in circle (or set position to center)."""
     key_radius, key_angle = jax.random.split(key)
     sampled_radius = jax.random.uniform(key_radius, minval=0, maxval=circle_radius)

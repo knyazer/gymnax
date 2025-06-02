@@ -215,7 +215,7 @@ class Pong(environment.Environment[EnvState, EnvParams]):
         return ax.imshow(numerical_state, cmap=cmap, norm=norm, interpolation="none")
 
 
-def update_game_state(state: EnvState, width: int) -> jax.Array:
+def update_game_state(state: EnvState, width: int) -> Bool[Array, ""]:
     """Check if right or left border win conditions are met."""
     win_right = state.ball_position[1] < 0
     win_left = state.ball_position[1] >= width
@@ -253,7 +253,7 @@ def reflect_on_borders(state: EnvState, height: int) -> EnvState:
 
 def reflect_on_paddle(
     state: EnvState, width: int, paddle_half_height: int, env_params: EnvParams
-):
+) -> EnvState:
     """Reflect ball on paddle contact."""
     left_paddle_reflected_x = 2 * 1 - state.ball_position[1]
     right_paddle_reflected_x = 2 * (width - 2) - state.ball_position[1]
@@ -318,11 +318,11 @@ def move_ball(state: EnvState) -> EnvState:
 
 def move_paddles(
     action: Int[Array, ""],
-    paddle_y_speed: Int[Array, ""],
+    paddle_y_speed: int,
     state: EnvState,
-    paddle_half_height: Int[Array, ""],
-    height: Int[Array, ""],
-    use_ai_policy: Bool[Array, ""],
+    paddle_half_height: int,
+    height: int,
+    use_ai_policy: bool,
 ) -> EnvState:
     """Update paddle positions and clip at height borders."""
     paddle_direction = (action == 2).astype(jnp.int32) - (action == 1).astype(jnp.int32)

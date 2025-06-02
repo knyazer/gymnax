@@ -5,16 +5,17 @@ from typing import Any
 import jax
 import jax.numpy as jnp
 from flax import struct
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 from gymnax.environments import environment, spaces
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    urchin_xys: jax.Array
-    xy: jax.Array
-    xy_vel: jax.Array
-    goal_xy: jax.Array
+    urchin_xys: Float[Array, "num_urchins 2"]
+    xy: Float[Array, "2"]
+    xy_vel: Float[Array, "2"]
+    goal_xy: Float[Array, "2"]
     time: float
 
 
@@ -42,11 +43,11 @@ class Swimmer(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
-        action: int | float | jax.Array,
+        action: int | float | Float[Array, "2"],
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[Float[Array, "obs_dim"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]]:
         """Sample bernoulli reward, increase counter, construct input."""
         xy_vel = state.xy_vel + params.dt * action
         xy = state.xy + params.dt * xy_vel
@@ -76,8 +77,8 @@ class Swimmer(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "obs_dim"], EnvState]:
         """Reset environment state by sampling initial position."""
         # Sample reward function + construct state as concat with timestamp
         key_urchin, key_xy, key_goal = jax.random.split(key, 3)
@@ -98,7 +99,7 @@ class Swimmer(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state, params), state
 
-    def get_obs(self, state: EnvState, params: EnvParams, key=None) -> jax.Array:
+    def get_obs(self, state: EnvState, params: EnvParams, key=None) -> Float[Array, "obs_dim"]:
         """Concatenate reward, one-hot action and time stamp."""
         ob = (
             jnp.reshape(state.urchin_xys, (-1, 2)),
@@ -109,11 +110,11 @@ class Swimmer(environment.Environment[EnvState, EnvParams]):
         ob = jnp.concatenate(ob, axis=0)
         return jnp.reshape(ob, (-1,))
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         # Check number of steps in episode termination condition
         done = state.time >= params.max_steps_in_episode
-        return jnp.array(done)
+        return done
 
     @property
     def name(self) -> str:

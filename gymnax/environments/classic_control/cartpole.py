@@ -7,15 +7,16 @@ import jax.numpy as jnp
 from flax import struct
 
 from gymnax.environments import environment, spaces
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    x: jax.Array
-    x_dot: jax.Array
-    theta: jax.Array
-    theta_dot: jax.Array
-    time: int
+    x: Float[Array, ""]
+    x_dot: Float[Array, ""]
+    theta: Float[Array, ""]
+    theta_dot: Float[Array, ""]
+    time: Int[Array, ""]
 
 
 @struct.dataclass
@@ -51,11 +52,13 @@ class CartPole(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
         action: int | float | jax.Array,
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "4"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+    ]:
         """Performs step transitions in the environment."""
         prev_terminal = self.is_terminal(state, params)
         force = params.force_mag * action - params.force_mag * (1 - action)
@@ -99,8 +102,8 @@ class CartPole(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "4"], EnvState]:
         """Performs resetting of environment."""
         init_state = jax.random.uniform(key, minval=-0.05, maxval=0.05, shape=(4,))
         state = EnvState(
@@ -112,11 +115,11 @@ class CartPole(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state), state
 
-    def get_obs(self, state: EnvState, params=None, key=None) -> jax.Array:
+    def get_obs(self, state: EnvState, params=None, key=None) -> Float[Array, "4"]:
         """Applies observation function to state."""
         return jnp.array([state.x, state.x_dot, state.theta, state.theta_dot])
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         # Check termination criteria
         done1 = jnp.logical_or(

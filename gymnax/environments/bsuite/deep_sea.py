@@ -157,7 +157,7 @@ class DeepSea(environment.Environment[EnvState, EnvParams]):
         obs_upd = obs_end.at[state.row, state.column].set(1.0)
         return jax.lax.select(end_cond, obs_end, obs_upd)
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         done_row = state.row == self.size
         done_steps = state.time >= params.max_steps_in_episode

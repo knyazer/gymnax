@@ -7,15 +7,16 @@ import jax.numpy as jnp
 from flax import struct
 
 from gymnax.environments import environment, spaces
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    last_action: jax.Array
-    last_reward: jax.Array
-    exp_reward_best: jax.Array
-    reward_probs: jax.Array
-    time: float
+    last_action: Int[Array, ""]
+    last_reward: Float[Array, ""]
+    exp_reward_best: Float[Array, ""]
+    reward_probs: Float[Array, "2"]
+    time: Float[Array, ""]
 
 
 @struct.dataclass
@@ -38,11 +39,13 @@ class BernoulliBandit(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
         action: int | float | jax.Array,
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jax.Array, jax.Array, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "4"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+    ]:
         """Sample bernoulli reward, increase counter, construct input."""
         reward = jax.random.bernoulli(key, state.reward_probs[action]).astype(jnp.int32)
         state = EnvState(
@@ -62,8 +65,8 @@ class BernoulliBandit(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "4"], EnvState]:
         """Reset environment state by sampling initial position."""
         # Sample reward function + construct state as concat with timestamp
         p1 = jax.random.choice(
@@ -81,7 +84,7 @@ class BernoulliBandit(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state, params), state
 
-    def get_obs(self, state: EnvState, params: EnvParams, key=None) -> jax.Array:
+    def get_obs(self, state: EnvState, params: EnvParams, key=None) -> Float[Array, "4"]:
         """Concatenate reward, one-hot action and time stamp."""
         action_one_hot = jax.nn.one_hot(state.last_action, 2).squeeze()
         time_rep = jax.lax.select(
@@ -93,7 +96,7 @@ class BernoulliBandit(environment.Environment[EnvState, EnvParams]):
         )
         return jnp.hstack([state.last_reward, action_one_hot, time_rep])
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jax.Array:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         # Check number of steps in episode termination condition
         done = state.time >= params.max_steps_in_episode
@@ -153,10 +156,10 @@ class BernoulliBandit(environment.Environment[EnvState, EnvParams]):
 
 
 def time_normalization(
-    t: float,
+    t: Float[Array, ""],
     min_lim: float = -1.0,
     max_lim: float = 1.0,
     t_max: int = 100,
-) -> float:
+) -> Float[Array, ""]:
     """Normalize time integer into range given max time."""
     return (max_lim - min_lim) * t / t_max + min_lim

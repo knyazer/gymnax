@@ -1,39 +1,42 @@
 """JAX compatible version of Seaquest MinAtar environment."""
 
+from typing import Any
+
 import jax
 import jax.numpy as jnp
 from flax import struct
 
 from gymnax.environments import environment, spaces
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
     """State of the environment."""
 
-    oxygen: int
-    sub_x: int
-    sub_y: int
-    sub_or: int
-    f_bullet_count: int
-    f_bullets: jax.Array
-    e_bullet_count: int
-    e_bullets: jax.Array
-    e_fish_count: int
-    e_fish: jax.Array
-    e_subs_count: int
-    e_subs: jax.Array
-    diver_count: int
-    divers: jax.Array
-    e_spawn_speed: int
-    e_spawn_timer: int
-    d_spawn_timer: int
-    move_speed: int
-    ramp_index: int
-    shot_timer: int
-    surface: int
-    time: int
-    terminal: bool
+    oxygen: Int[Array, ""]
+    sub_x: Int[Array, ""]
+    sub_y: Int[Array, ""]
+    sub_or: Int[Array, ""]
+    f_bullet_count: Int[Array, ""]
+    f_bullets: Int[Array, "100 3"]
+    e_bullet_count: Int[Array, ""]
+    e_bullets: Int[Array, "100 3"]
+    e_fish_count: Int[Array, ""]
+    e_fish: Int[Array, "100 5"]
+    e_subs_count: Int[Array, ""]
+    e_subs: Int[Array, "100 5"]
+    diver_count: Int[Array, ""]
+    divers: Int[Array, "100 4"]
+    e_spawn_speed: Int[Array, ""]
+    e_spawn_timer: Int[Array, ""]
+    d_spawn_timer: Int[Array, ""]
+    move_speed: Int[Array, ""]
+    ramp_index: Int[Array, ""]
+    shot_timer: Int[Array, ""]
+    surface: Int[Array, ""]
+    time: Int[Array, ""]
+    terminal: Bool[Array, ""]
 
 
 @struct.dataclass
@@ -110,11 +113,13 @@ class MinSeaquest(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
         action: int | float | jax.Array,
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jnp.ndarray, bool, dict]:  # dict]:
+    ) -> tuple[
+        Float[Array, "10 10 10"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+    ]:
         """Perform single timestep state transition."""
         # If timer is up spawn enemy and divers [always sample]
         # key_enemy, key_diver = jax.random.split(key)
@@ -156,8 +161,8 @@ class MinSeaquest(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "10 10 10"], EnvState]:
         """Reset environment state by sampling initial position."""
         state = EnvState(
             oxygen=params.max_oxygen,
@@ -186,7 +191,7 @@ class MinSeaquest(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state, params), state
 
-    def get_obs(self, state: EnvState, params: EnvParams, key=None) -> jax.Array:
+    def get_obs(self, state: EnvState, params: EnvParams, key=None) -> Float[Array, "10 10 10"]:
         """Return observation from raw state trafo."""
         fish, sub, diver = [], [], []
         obs = jnp.zeros(self.obs_shape, dtype=bool)
@@ -243,7 +248,7 @@ class MinSeaquest(environment.Environment[EnvState, EnvParams]):
             )
         return obs.astype(jnp.float32)
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> bool:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         done_steps = state.time >= params.max_steps_in_episode
         return jnp.logical_or(state.terminal, done_steps).item()

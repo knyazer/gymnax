@@ -7,20 +7,21 @@ import jax.numpy as jnp
 from flax import struct
 
 from gymnax.environments import environment, spaces
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 
 @struct.dataclass
 class EnvState(environment.EnvState):
-    ball_y: jax.Array
-    ball_x: jax.Array
-    ball_dir: jax.Array
-    pos: int
-    brick_map: jax.Array
-    strike: bool
-    last_y: jax.Array
-    last_x: jax.Array
-    time: int
-    terminal: bool
+    ball_y: Int[Array, ""]
+    ball_x: Int[Array, ""]
+    ball_dir: Int[Array, ""]
+    pos: Int[Array, ""]
+    brick_map: Bool[Array, "10 10"]
+    strike: Bool[Array, ""]
+    last_y: Int[Array, ""]
+    last_x: Int[Array, ""]
+    time: Int[Array, ""]
+    terminal: Bool[Array, ""]
 
 
 @struct.dataclass
@@ -71,11 +72,13 @@ class MinBreakout(environment.Environment[EnvState, EnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: EnvState,
         action: int | float | jax.Array,
         params: EnvParams,
-    ) -> tuple[jax.Array, EnvState, jnp.ndarray, jnp.ndarray, dict[Any, Any]]:
+    ) -> tuple[
+        Float[Array, "10 10 4"], EnvState, Float[Array, ""], Bool[Array, ""], dict[Any, Any]
+    ]:
         """Perform single timestep state transition."""
         a = self.action_set[action]
         state, new_x, new_y = step_agent(state, a)
@@ -95,8 +98,8 @@ class MinBreakout(environment.Environment[EnvState, EnvParams]):
         )
 
     def reset_env(
-        self, key: jax.Array, params: EnvParams
-    ) -> tuple[jax.Array, EnvState]:
+        self, key: PRNGKeyArray, params: EnvParams
+    ) -> tuple[Float[Array, "10 10 4"], EnvState]:
         """Reset environment state by sampling initial position."""
         ball_start = jax.random.choice(key, jnp.array([0, 1]), shape=())
         state = EnvState(
@@ -113,7 +116,7 @@ class MinBreakout(environment.Environment[EnvState, EnvParams]):
         )
         return self.get_obs(state), state
 
-    def get_obs(self, state: EnvState, params=None, key=None) -> jax.Array:
+    def get_obs(self, state: EnvState, params=None, key=None) -> Float[Array, "10 10 4"]:
         """Return observation from raw state trafo."""
         obs = jnp.zeros(self.obs_shape, dtype=jnp.bool)
         # Set the position of the player paddle, paddle, trail & brick map
@@ -123,7 +126,7 @@ class MinBreakout(environment.Environment[EnvState, EnvParams]):
         obs = obs.at[:, :, 3].set(state.brick_map.astype(jnp.bool))
         return obs.astype(jnp.float32)
 
-    def is_terminal(self, state: EnvState, params: EnvParams) -> jnp.ndarray:
+    def is_terminal(self, state: EnvState, params: EnvParams) -> Bool[Array, ""]:
         """Check whether state is terminal."""
         done_steps = state.time >= params.max_steps_in_episode
         return jnp.logical_or(done_steps, state.terminal)
@@ -166,8 +169,8 @@ class MinBreakout(environment.Environment[EnvState, EnvParams]):
 
 def step_agent(
     state: EnvState,
-    action: jax.Array,
-) -> tuple[EnvState, jax.Array, jax.Array]:
+    action: Int[Array, ""],
+) -> tuple[EnvState, Int[Array, ""], Int[Array, ""]]:
     """Helper that steps the agent and checks boundary conditions."""
     # Update player position
     pos = (
@@ -215,8 +218,8 @@ def step_agent(
 
 
 def step_ball_brick(
-    state: EnvState, new_x: jax.Array, new_y: jax.Array
-) -> tuple[EnvState, jax.Array]:
+    state: EnvState, new_x: Int[Array, ""], new_y: Int[Array, ""]
+) -> tuple[EnvState, Float[Array, ""]]:]
     """Helper that computes reward and termination cond. from brickmap."""
 
     reward = 0
