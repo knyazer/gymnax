@@ -1,6 +1,8 @@
+# Typechecking magic
 from beartype.claw import beartype_package
 
 beartype_package("gymnax")
+
 
 from tests.helpers import (
     assert_correct_state,

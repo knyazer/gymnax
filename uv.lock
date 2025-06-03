@@ -320,21 +320,6 @@ wheels = [
 ]
 
 [[package]]
-name = "equinox"
-version = "0.12.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "jax" },
-    { name = "jaxtyping" },
-    { name = "typing-extensions" },
-    { name = "wadler-lindig" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/4c/1c/da174caa2902cee108a542cfb801bd4366a5e44541b625d5a0984c9238e0/equinox-0.12.2.tar.gz", hash = "sha256:648e4206bbc53b228922e8f18cd3cffe543ddda1172c0002f8954e484bab0023", size = 139007, upload-time = "2025-05-14T09:31:00.072Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/8e/a7/5961a7cad10df1e165a8b9c4ba0661aaec9497861e53682effa1787d97aa/equinox-0.12.2-py3-none-any.whl", hash = "sha256:0d9c09c077e7895a5334930ddb9ecd7d39840c3ad252cf8262aa8ddc6bb8ae97", size = 177247, upload-time = "2025-05-14T09:30:58.252Z" },
-]
-
-[[package]]
 name = "etils"
 version = "1.12.2"
 source = { registry = "https://pypi.org/simple" }
@@ -580,7 +565,6 @@ name = "gymnax"
 version = "0.0.9"
 source = { virtual = "." }
 dependencies = [
-    { name = "equinox" },
     { name = "flax" },
     { name = "gymnasium" },
     { name = "jax" },
@@ -594,7 +578,6 @@ dev = [
     { name = "beartype" },
     { name = "mypy" },
     { name = "pytest" },
-    { name = "pytest-beartype" },
     { name = "pytest-cov" },
     { name = "ruff" },
 ]
@@ -610,7 +593,6 @@ requires-dist = [
     { name = "beartype", marker = "extra == 'dev'" },
     { name = "brax", marker = "extra == 'test'" },
     { name = "chex", marker = "extra == 'test'" },
-    { name = "equinox" },
     { name = "flax" },
     { name = "flax", marker = "extra == 'test'" },
     { name = "gymnasium" },
@@ -620,7 +602,6 @@ requires-dist = [
     { name = "minatar", marker = "extra == 'test'" },
     { name = "mypy", marker = "extra == 'dev'" },
     { name = "pytest", marker = "extra == 'dev'" },
-    { name = "pytest-beartype", marker = "extra == 'dev'" },
     { name = "pytest-cov", marker = "extra == 'dev'" },
     { name = "ruff", marker = "extra == 'dev'" },
     { name = "seaborn" },
@@ -1513,19 +1494,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/fb/aa/405082ce2749be5398045152251ac69c0f3578c7077efc53431303af97ce/pytest-8.4.0.tar.gz", hash = "sha256:14d920b48472ea0dbf68e45b96cd1ffda4705f33307dcc86c676c1b5104838a6", size = 1515232, upload-time = "2025-06-02T17:36:30.03Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2f/de/afa024cbe022b1b318a3d224125aa24939e99b4ff6f22e0ba639a2eaee47/pytest-8.4.0-py3-none-any.whl", hash = "sha256:f40f825768ad76c0977cbacdf1fd37c6f7a468e460ea6a0636078f8972d4517e", size = 363797, upload-time = "2025-06-02T17:36:27.859Z" },
-]
-
-[[package]]
-name = "pytest-beartype"
-version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "beartype" },
-    { name = "pytest" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/63/69/954ee438f1c72f4247b09381cd07a7d776ebdb4f6c0359b3b971676a2eef/pytest_beartype-0.2.0.tar.gz", hash = "sha256:9eeec379f812e0e5c9c1bb7e95d90a33a79c387034f2d735e03bc9aa0fd7cf3f", size = 5871, upload-time = "2024-10-31T17:52:35.974Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/81/69/87efc2482aab172a32e4147eb5666ebc2e4c875e17d3104878553720a83a/pytest_beartype-0.2.0-py3-none-any.whl", hash = "sha256:be6be04be4a143f965f21140d6661bab43dcd7c761d50cf6daa1b16848e5d2d0", size = 4940, upload-time = "2024-10-31T17:52:33.528Z" },
 ]
 
 [[package]]
