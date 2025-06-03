@@ -19,7 +19,7 @@ class EnvState(environment.EnvState):
     theta: Float[Array, ""]
     theta_dot: Float[Array, ""]
     last_u: Float[Array, ""]  # Only needed for rendering
-    time: Int[Array, ""]
+    time: int | Int[Array, ""]
 
 
 @struct.dataclass

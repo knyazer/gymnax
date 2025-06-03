@@ -31,7 +31,6 @@ dev = [
     "ruff",
     "mypy",
     "beartype",
-    "pytest-beartype",
 ]
 test = [
     "chex",
