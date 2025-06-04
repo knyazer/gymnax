@@ -11,6 +11,7 @@ from typing import (
 import jax
 from flax import struct
 from dataclasses import dataclass
+from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 
 TEnvState = TypeVar("TEnvState", bound="EnvState")
 TEnvParams = TypeVar("TEnvParams", bound="EnvParams")
@@ -18,12 +19,12 @@ TEnvParams = TypeVar("TEnvParams", bound="EnvParams")
 
 @struct.dataclass
 class EnvState:
-    time: int
+    time: int | Int[Array, ""]
 
 
 @struct.dataclass
 class EnvParams:
-    max_steps_in_episode: int = 1
+    max_steps_in_episode: int | Int[Array, ""] = 1
 
 
 class Environment(Generic[TEnvState, TEnvParams]):
@@ -36,7 +37,7 @@ class Environment(Generic[TEnvState, TEnvParams]):
     @partial(jax.jit, static_argnames=("self",))
     def step(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: TEnvState,
         action: int | float | jax.Array,
         params: TEnvParams | None = None,
@@ -62,7 +63,7 @@ class Environment(Generic[TEnvState, TEnvParams]):
 
     @partial(jax.jit, static_argnames=("self",))
     def reset(
-        self, key: jax.Array, params: TEnvParams | None = None
+        self, key: PRNGKeyArray, params: TEnvParams | None = None
     ) -> tuple[jax.Array, TEnvState]:
         """Performs resetting of environment."""
         if params is None:
@@ -75,7 +76,7 @@ class Environment(Generic[TEnvState, TEnvParams]):
 
     def step_env(
         self,
-        key: jax.Array,
+        key: PRNGKeyArray,
         state: TEnvState,
         action: int | float | jax.Array,
         params: TEnvParams,
@@ -84,7 +85,7 @@ class Environment(Generic[TEnvState, TEnvParams]):
         raise NotImplementedError
 
     def reset_env(
-        self, key: jax.Array, params: TEnvParams
+        self, key: PRNGKeyArray, params: TEnvParams
     ) -> tuple[jax.Array, TEnvState]:
         """Environment-specific reset."""
         raise NotImplementedError
@@ -108,7 +109,7 @@ class Environment(Generic[TEnvState, TEnvParams]):
 
     @overload
     def get_obs(
-        self, state: TEnvState, key: jax.Array, params: TEnvParams
+        self, state: TEnvState, key: PRNGKeyArray, params: TEnvParams
     ) -> jax.Array:
         """Applies observation function to state."""
         raise NotImplementedError

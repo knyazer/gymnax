@@ -21,12 +21,12 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    reward_prob: float = 0.1
-    normalize_time: bool = True
-    max_steps_in_episode: float = 100.0
-    min_lim: float = -1.0
-    max_lim: float = 1.0
-    t_max: int = 100
+    reward_prob: float | Float[Array, ""] = 0.1
+    normalize_time: bool | Bool[Array, ""] = True
+    max_steps_in_episode: float | Float[Array, ""] = 100.0
+    min_lim: float | Float[Array, ""] = -1.0
+    max_lim: float | Float[Array, ""] = 1.0
+    t_max: int | Int[Array, ""] = 100
 
 
 class BernoulliBandit(environment.Environment[EnvState, EnvParams]):

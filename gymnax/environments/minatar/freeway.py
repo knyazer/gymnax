@@ -41,8 +41,8 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    player_speed: int = 3
-    max_steps_in_episode: int = 2500
+    player_speed: int | Int[Array, ""] = 3
+    max_steps_in_episode: int | Int[Array, ""] = 2500
 
 
 class MinFreeway(environment.Environment[EnvState, EnvParams]):

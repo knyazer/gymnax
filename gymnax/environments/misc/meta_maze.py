@@ -34,10 +34,10 @@ class EnvParams(environment.EnvParams):
     180c9101fa5be5a2da205da3399a92773d395091/simplemaze/maze.py#L414-L431
     """
 
-    reward: float = 10.0
-    punishment: float = 0.0
-    normalize_time: bool = False
-    max_steps_in_episode: int = 200
+    reward: float | Float[Array, ""] = 10.0
+    punishment: float | Float[Array, ""] = 0.0
+    normalize_time: bool | Bool[Array, ""] = False
+    max_steps_in_episode: int | Int[Array, ""] = 200
 
 
 def generate_maze_layout(maze_size: int, rf_size: int) -> Bool[Array, "height width"]:

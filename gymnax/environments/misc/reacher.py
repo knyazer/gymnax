@@ -20,9 +20,9 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    torque_scale: float = 1.0
-    dt: float = 0.05
-    max_steps_in_episode: int = 100  # Steps in an episode (constant goal)
+    torque_scale: float | Float[Array, ""] = 1.0
+    dt: float | Float[Array, ""] = 0.05
+    max_steps_in_episode: int | Int[Array, ""] = 100  # Steps in an episode (constant goal)
 
 
 class Reacher(environment.Environment[EnvState, EnvParams]):

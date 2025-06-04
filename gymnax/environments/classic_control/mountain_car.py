@@ -24,14 +24,14 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    min_position: float = -1.2
-    max_position: float = 0.6
-    max_speed: float = 0.07
-    goal_position: float = 0.5
-    goal_velocity: float = 0.0
-    force: float = 0.001
-    gravity: float = 0.0025
-    max_steps_in_episode: int = 200
+    min_position: float | Float[Array, ""] = -1.2
+    max_position: float | Float[Array, ""] = 0.6
+    max_speed: float | Float[Array, ""] = 0.07
+    goal_position: float | Float[Array, ""] = 0.5
+    goal_velocity: float | Float[Array, ""] = 0.0
+    force: float | Float[Array, ""] = 0.001
+    gravity: float | Float[Array, ""] = 0.0025
+    max_steps_in_episode: int | Int[Array, ""] = 200
 
 
 class MountainCar(environment.Environment[EnvState, EnvParams]):

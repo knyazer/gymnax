@@ -33,11 +33,11 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    ball_max_y_speed: int = 3
-    paddle_y_speed: int = 1
-    ball_x_speed: int = 1
-    use_ai_policy: bool = True
-    max_steps_in_episode: int = 1000
+    ball_max_y_speed: int | Int[Array, ""] = 3
+    paddle_y_speed: int | Int[Array, ""] = 1
+    ball_x_speed: int | Int[Array, ""] = 1
+    use_ai_policy: bool | Bool[Array, ""] = True
+    max_steps_in_episode: int | Int[Array, ""] = 1000
 
 
 class Pong(environment.Environment[EnvState, EnvParams]):

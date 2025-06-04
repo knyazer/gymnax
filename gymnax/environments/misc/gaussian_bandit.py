@@ -20,11 +20,11 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    mean_mu: float = -1.0  # Mean of stochastic arm
-    sigma_p: float = 1.0  # Standard deviation between 'episode'
-    sigma_l: float = 0.1  # Standard deviation between 'pulls'
-    normalize_time: bool = True
-    max_steps_in_episode: int = 100
+    mean_mu: float | Float[Array, ""] = -1.0  # Mean of stochastic arm
+    sigma_p: float | Float[Array, ""] = 1.0  # Standard deviation between 'episode'
+    sigma_l: float | Float[Array, ""] = 0.1  # Standard deviation between 'pulls'
+    normalize_time: bool | Bool[Array, ""] = True
+    max_steps_in_episode: int | Int[Array, ""] = 100
 
 
 class GaussianBandit(environment.Environment[EnvState, EnvParams]):

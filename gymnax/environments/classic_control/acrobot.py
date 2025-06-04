@@ -32,18 +32,18 @@ class EnvParams(environment.EnvParams):
     available_torque: Float[Array, "3"] = dataclasses.field(
         default_factory=lambda: jnp.array([-1.0, 0.0, +1.0])
     )
-    dt: float = 0.2
-    link_length_1: float = 1.0
-    link_length_2: float = 1.0
-    link_mass_1: float = 1.0
-    link_mass_2: float = 1.0
-    link_com_pos_1: float = 0.5
-    link_com_pos_2: float = 0.5
-    link_moi: float = 1.0
-    max_vel_1: float = 4 * jnp.pi
-    max_vel_2: float = 9 * jnp.pi
-    torque_noise_max: float = 0.0
-    max_steps_in_episode: int = 500
+    dt: float | Float[Array, ""] = 0.2
+    link_length_1: float | Float[Array, ""] = 1.0
+    link_length_2: float | Float[Array, ""] = 1.0
+    link_mass_1: float | Float[Array, ""] = 1.0
+    link_mass_2: float | Float[Array, ""] = 1.0
+    link_com_pos_1: float | Float[Array, ""] = 0.5
+    link_com_pos_2: float | Float[Array, ""] = 0.5
+    link_moi: float | Float[Array, ""] = 1.0
+    max_vel_1: float | Float[Array, ""] = 4 * jnp.pi
+    max_vel_2: float | Float[Array, ""] = 9 * jnp.pi
+    torque_noise_max: float | Float[Array, ""] = 0.0
+    max_steps_in_episode: int | Int[Array, ""] = 500
 
 
 class Acrobot(environment.Environment[EnvState, EnvParams]):

@@ -41,17 +41,17 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    ramping: bool = True
-    ramp_interval: int = 100
-    init_spawn_speed: int = 20
-    init_move_interval: int = 5
-    max_oxygen: int = 200
-    diver_spawn_speed: int = 30
-    shot_cool_down: int = 5
-    enemy_shot_interval: int = 10
-    enemy_move_interval: int = 5
-    diver_move_interval: int = 5
-    max_steps_in_episode: int = 1000
+    ramping: bool | Bool[Array, ""] = True
+    ramp_interval: int | Int[Array, ""] = 100
+    init_spawn_speed: int | Int[Array, ""] = 20
+    init_move_interval: int | Int[Array, ""] = 5
+    max_oxygen: int | Int[Array, ""] = 200
+    diver_spawn_speed: int | Int[Array, ""] = 30
+    shot_cool_down: int | Int[Array, ""] = 5
+    enemy_shot_interval: int | Int[Array, ""] = 10
+    enemy_move_interval: int | Int[Array, ""] = 5
+    diver_move_interval: int | Int[Array, ""] = 5
+    max_steps_in_episode: int | Int[Array, ""] = 1000
 
 
 class MinSeaquest(environment.Environment[EnvState, EnvParams]):

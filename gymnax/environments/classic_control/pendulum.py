@@ -18,19 +18,19 @@ from jaxtyping import Array, Float, Int, Bool, PRNGKeyArray
 class EnvState(environment.EnvState):
     theta: Float[Array, ""]
     theta_dot: Float[Array, ""]
-    last_u: Float[Array, ""]  # Only needed for rendering
+    last_u: Float[Array, ""] | None  # Only needed for rendering
     time: int | Int[Array, ""]
 
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    max_speed: float = 8.0
-    max_torque: float = 2.0
-    dt: float = 0.05
-    g: float = 10.0
-    m: float = 1.0
-    l: float = 1.0  # noqa: E741
-    max_steps_in_episode: int = 200
+    max_speed: float | Float[Array, ""] = 8.0
+    max_torque: float | Float[Array, ""] = 2.0
+    dt: float | Float[Array, ""] = 0.05
+    g: float | Float[Array, ""] = 10.0
+    m: float | Float[Array, ""] = 1.0
+    l: float | Float[Array, ""] = 1.0  # noqa: E741
+    max_steps_in_episode: int | Int[Array, ""] = 200
 
 
 class Pendulum(environment.Environment[EnvState, EnvParams]):

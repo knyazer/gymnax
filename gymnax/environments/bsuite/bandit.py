@@ -19,8 +19,8 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    optimal_return: Float[Array, ""] | float = 1.0
-    max_steps_in_episode: Int[Array, ""] | int = 100
+    optimal_return: float | Float[Array, ""] = 1.0
+    max_steps_in_episode: int | Int[Array, ""] = 100
 
 
 class SimpleBandit(environment.Environment[EnvState, EnvParams]):

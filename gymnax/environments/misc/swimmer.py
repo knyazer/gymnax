@@ -21,8 +21,8 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    dt: float = 0.05
-    max_steps_in_episode: int = 500  # Steps in an episode (constant goal)
+    dt: float | Float[Array, ""] = 0.05
+    max_steps_in_episode: int | Int[Array, ""] = 500  # Steps in an episode (constant goal)
 
 
 class Swimmer(environment.Environment[EnvState, EnvParams]):

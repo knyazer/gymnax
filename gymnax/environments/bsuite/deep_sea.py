@@ -27,11 +27,11 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    deterministic: bool = True
-    sample_action_map: bool = False
-    unscaled_move_cost: float = 0.01
-    randomize_actions: bool = False
-    max_steps_in_episode: int = 2000
+    deterministic: bool | Bool[Array, ""] = True
+    sample_action_map: bool | Bool[Array, ""] = False
+    unscaled_move_cost: float | Float[Array, ""] = 0.01
+    randomize_actions: bool | Bool[Array, ""] = False
+    max_steps_in_episode: int | Int[Array, ""] = 2000
 
 
 class DeepSea(environment.Environment[EnvState, EnvParams]):

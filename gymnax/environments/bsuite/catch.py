@@ -30,7 +30,7 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    max_steps_in_episode: int = 1000
+    max_steps_in_episode: int | Int[Array, ""] = 1000
 
 
 class Catch(environment.Environment[EnvState, EnvParams]):

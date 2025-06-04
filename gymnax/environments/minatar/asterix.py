@@ -47,12 +47,12 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    ramping: bool = True
-    ramp_interval: int = 100
-    init_spawn_speed: int = 10
-    init_move_interval: int = 5
-    shot_cool_down: int = 5
-    max_steps_in_episode: int = 1000
+    ramping: bool | Bool[Array, ""] = True
+    ramp_interval: int | Int[Array, ""] = 100
+    init_spawn_speed: int | Int[Array, ""] = 10
+    init_move_interval: int | Int[Array, ""] = 5
+    shot_cool_down: int | Int[Array, ""] = 5
+    max_steps_in_episode: int | Int[Array, ""] = 1000
 
 
 class MinAsterix(environment.Environment[EnvState, EnvParams]):

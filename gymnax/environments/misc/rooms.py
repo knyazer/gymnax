@@ -28,10 +28,10 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    fail_prob: float = 1.0 / 3
-    resample_init_pos: bool = False
-    resample_goal_pos: bool = False
-    max_steps_in_episode: int = 500
+    fail_prob: float | Float[Array, ""] = 1.0 / 3
+    resample_init_pos: bool | Bool[Array, ""] = False
+    resample_goal_pos: bool | Bool[Array, ""] = False
+    max_steps_in_episode: int | Int[Array, ""] = 500
 
 
 four_rooms_map = """

@@ -21,17 +21,17 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    gravity: float = 9.8
-    masscart: float = 1.0
-    masspole: float = 0.1
-    total_mass: float = 1.0 + 0.1  # (masscart + masspole)
-    length: float = 0.5
-    polemass_length: float = 0.05  # (masspole * length)
-    force_mag: float = 10.0
-    tau: float = 0.02
-    theta_threshold_radians: float = 12 * 2 * jnp.pi / 360
-    x_threshold: float = 2.4
-    max_steps_in_episode: int = 500  # v0 had only 200 steps!
+    gravity: float | Float[Array, ""] = 9.8
+    masscart: float | Float[Array, ""] = 1.0
+    masspole: float | Float[Array, ""] = 0.1
+    total_mass: float | Float[Array, ""] = 1.0 + 0.1  # (masscart + masspole)
+    length: float | Float[Array, ""] = 0.5
+    polemass_length: float | Float[Array, ""] = 0.05  # (masspole * length)
+    force_mag: float | Float[Array, ""] = 10.0
+    tau: float | Float[Array, ""] = 0.02
+    theta_threshold_radians: float | Float[Array, ""] = 12 * 2 * jnp.pi / 360
+    x_threshold: float | Float[Array, ""] = 2.4
+    max_steps_in_episode: int | Int[Array, ""] = 500  # v0 had only 200 steps!
 
 
 class CartPole(environment.Environment[EnvState, EnvParams]):

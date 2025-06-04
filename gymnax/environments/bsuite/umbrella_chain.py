@@ -25,8 +25,8 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    chain_length: int = 10
-    max_steps_in_episode: int = 100
+    chain_length: int | Int[Array, ""] = 10
+    max_steps_in_episode: int | Int[Array, ""] = 100
 
 
 class UmbrellaChain(environment.Environment[EnvState, EnvParams]):

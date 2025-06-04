@@ -53,10 +53,10 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    shot_cool_down: int = 5
-    enemy_move_interval: int = 12
-    enemy_shot_interval: int = 10
-    max_steps_in_episode: int = 1000
+    shot_cool_down: int | Int[Array, ""] = 5
+    enemy_move_interval: int | Int[Array, ""] = 12
+    enemy_shot_interval: int | Int[Array, ""] = 10
+    max_steps_in_episode: int | Int[Array, ""] = 1000
 
 
 class MinSpaceInvaders(environment.Environment[EnvState, EnvParams]):

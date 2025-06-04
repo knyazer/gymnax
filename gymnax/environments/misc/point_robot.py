@@ -23,13 +23,13 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    max_force: float = 0.1  # Max action (+/-)
-    circle_radius: float = 1.0  # Radius of semi-circle
-    dense_reward: bool = False  # Distance reward at each timestep
-    goal_radius: float = 0.2  # Radius for success
-    center_init: bool = False  # Init at [0, 0]. Otherwise sample in radius
-    normalize_time: bool = True  # Normalize timestep into [-1, 1]
-    max_steps_in_episode: int = 100  # Steps in an episode (constant goal)
+    max_force: float | Float[Array, ""] = 0.1  # Max action (+/-)
+    circle_radius: float | Float[Array, ""] = 1.0  # Radius of semi-circle
+    dense_reward: bool | Bool[Array, ""] = False  # Distance reward at each timestep
+    goal_radius: float | Float[Array, ""] = 0.2  # Radius for success
+    center_init: bool | Bool[Array, ""] = False  # Init at [0, 0]. Otherwise sample in radius
+    normalize_time: bool | Bool[Array, ""] = True  # Normalize timestep into [-1, 1]
+    max_steps_in_episode: int | Int[Array, ""] = 100  # Steps in an episode (constant goal)
 
 
 class PointRobot(environment.Environment[EnvState, EnvParams]):

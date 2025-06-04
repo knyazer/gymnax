@@ -28,8 +28,8 @@ class EnvState(environment.EnvState):
 
 @struct.dataclass
 class EnvParams(environment.EnvParams):
-    memory_length: int = 5
-    max_steps_in_episode: int = 1000
+    memory_length: int | Int[Array, ""] = 5
+    max_steps_in_episode: int | Int[Array, ""] = 1000
 
 
 class MemoryChain(environment.Environment[EnvState, EnvParams]):

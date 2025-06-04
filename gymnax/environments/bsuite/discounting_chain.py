@@ -28,8 +28,8 @@ class EnvParams(environment.EnvParams):
     reward_timestep: Int[Array, "n_ts"] = dataclasses.field(
         default_factory=lambda: jnp.array([1, 3, 10, 30, 100])
     )
-    optimal_return: float = 1.1
-    max_steps_in_episode: int = 100
+    optimal_return: float | Float[Array, ""] = 1.1
+    max_steps_in_episode: int | Int[Array, ""] = 100
 
 
 class DiscountingChain(environment.Environment[EnvState, EnvParams]):
